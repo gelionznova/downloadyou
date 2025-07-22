@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>YouDownloader</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <link rel="icon" href="{{ url_for('static', filename='android-chrome-512x512.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='android-chrome-512x512.png') }}">
+  <meta name="theme-color" content="#0d6efd" />
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
+</head>
+<body class="bg-light">
+  <div class="container mt-5">
+    <h2 class="mb-4">Buscar y Descargar Música de YouTube</h2>
+
+    <form method="post" action="{{ url_for('index') }}">
+      <div class="input-group mb-3">
+        <input type="text" name="query" class="form-control" placeholder="Nombre de canción o artista" required aria-label="Nombre de canción o artista" />
+        <button class="btn btn-primary" type="submit">Buscar</button>
+      </div>
+    </form>
+
+    {% if not ffmpeg_ok %}
+    <div class="alert alert-warning" role="alert">
+      ⚠️ ffmpeg/ffprobe no disponibles (solo aviso para dev).
+    </div>
+    {% endif %}
+
+    {% if resultados %}
+    <ul class="list-group" id="resultados">
+      {% for video in resultados %}
+      <li class="list-group-item">
+        <div class="d-flex justify-content-between align-items-center">
+          <span>{{ video.title }}</span>
+          <button type="button" class="btn btn-success btn-sm descargar" data-url="{{ video.link }}" data-idx="{{ loop.index }}" aria-label="Descargar {{ video.title }}">
+            Descargar
+          </button>
+        </div>
+
+        <div class="progress mt-2 visually-hidden" id="progress-{{ loop.index }}" aria-live="polite">
+          <div class="progress-bar progress-bar-striped progress-bar-animated" style="width:100%">Descargando...</div>
+        </div>
+
+        <div id="resultado-{{ loop.index }}" class="mt-2" role="alert"></div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+
+  <script defer>
+    document.addEventListener("DOMContentLoaded", () => {
+      $(".descargar").on("click", function () {
+        const url = $(this).data("url");
+        const idx = $(this).data("idx");
+        const $btn = $(this);
+        const $prog = $("#progress-" + idx);
+        const $res = $("#resultado-" + idx);
+
+        $prog.removeClass("visually-hidden");
+        $res.empty();
+        $btn.prop("disabled", true).text("Descargando...");
+
+        $.ajax({
+          url: "{{ url_for('descargar') }}",
+          method: "POST",
+          contentType: "application/json",
+          data: JSON.stringify({ url }),
+          success: function (data) {
+            $prog.addClass("visually-hidden");
+            $btn.prop("disabled", false).text("Descargar");
+
+            if (data.success) {
+              const dlUrl = "{{ url_for('download_file', filename='__FILENAME__') }}".replace("__FILENAME__", encodeURIComponent(data.filename));
+              $res.html(`<div class='alert alert-success'>Descarga completa. <a href='${dlUrl}' download rel='noopener noreferrer'>Guardar archivo</a></div>`);
+            } else {
+              $res.html(`<div class='alert alert-danger'>Error: ${data.error}</div>`);
+            }
+          },
+          error: function () {
+            $prog.addClass("visually-hidden");
+            $btn.prop("disabled", false).text("Descargar");
+            $res.html(`<div class='alert alert-danger'>Error inesperado. Intenta de nuevo.</div>`);
+          },
+        });
+      });
+
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .register("{{ url_for('sw') }}")
+          .then(() => console.log("✅ Service Worker registrado"))
+          .catch(err => console.log("❌ Error al registrar SW:", err));
+      }
+    });
+  </script>
+</body>
+</html>
