@@ -1,10 +1,8 @@
 {
-  "id": "/",
   "name": "YouDownloader",
   "short_name": "YouDownloader",
   "description": "Descarga audio de YouTube fácilmente",
   "start_url": "/",
-  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#0d6efd",
@@ -12,14 +10,12 @@
     {
       "src": "/static/icon.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
+      "type": "image/png"
     },
     {
-      "src": "/static/android-chrome-512x512.png",
+      "src": "/static/android-chrome-512x512",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }
