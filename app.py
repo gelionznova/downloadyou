@@ -12,7 +12,8 @@ app.secret_key = os.getenv("SECRET_KEY", "change_me")
 DOWNLOAD_DIR = os.getenv("DOWNLOAD_DIR", "/tmp/downloads")
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
-FFMPEG_PATH = os.getenv("FFMPEG_PATH")  # si usas NIXPACKS_PKGS=ffmpeg, deja None
+
+FFMPEG_PATH = r'./ffmpeg/bin'
 COOKIEFILE = decode_cookies_from_env("/tmp/cookies.txt")  # opcional
 
 @app.route("/", methods=["GET", "POST"])
